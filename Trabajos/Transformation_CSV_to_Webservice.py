@@ -10,10 +10,10 @@ files = os.listdir(cwd)
 cwd
 
 
-#Import CSV File.
-MIDDLE = pd.read_csv('MIDDLE_CISA_JUNIO.csv', sep=";", encoding='latin-1')
+#Import CSV File:
+MIDDLE = pd.read_csv('file.csv', sep=";", encoding='latin-1')
 
-#File Validation: función cantidad de columnas y nombre de columnas.
+#File Validation: Columns amount and name validation:
 
 def CANTIDAD_COLUMNAS(x):
     """_summary_: Valida el archivo de carga contra el formato "tipo" enviado por el socio y realiza una primera validación sobre el número de columnas.
@@ -23,9 +23,8 @@ def CANTIDAD_COLUMNAS(x):
 
     Returns:
          Devuelve un mensaje solo cuando se identifica que cambio (se agrega o se quita) el número de columnas.
-    """  
-    
-# Se definen las listas de campos a comparar (archivo de orginal) vs (nuevo archivo)
+    """ 
+
     Columnas = x.columns
     Columnas_Original = ['Apellido', 'Nombre', 'NumeroDocumento', 'Calle', 'Altura', 'Piso',
        'Departamento', 'Ciudad', 'Provincia', 'CodigoPostal', 'NumeroZona',
@@ -47,7 +46,7 @@ def NOMBRE_COLUMNAS(x):
     Returns:
       Devuelve un mensaje solo cuando se identifica que cambio el nombre de alguna columna.
     """      
-# Se definen las listas de campos a comparar (archivo de orginal) vs (nuevo archivo)
+
     Columnas = x.columns
     Columnas_Original = ['Apellido', 'Nombre', 'NumeroDocumento', 'Calle', 'Altura', 'Piso',
        'Departamento', 'Ciudad', 'Provincia', 'CodigoPostal', 'NumeroZona',
@@ -61,7 +60,7 @@ def NOMBRE_COLUMNAS(x):
         if Columnas[i] != Columnas_Original[i]:
             return ('cambio el nombre de alguna una columna')
 
-# Normalización del campo "Observaciones".
+# "Observaciones" column tranforamtion:
 
 def NORMALIZACION_CAMPO_OBSERVACIONES():
       """_summary_: Realiza un split del campo observaciones y luego itera sobre e mismo para limpiar palabras y caraceteres 
@@ -93,7 +92,7 @@ def NORMALIZACION_CAMPO_OBSERVACIONES():
       except:
           print('Se modifico el campo observaciones enviado en el archivo de origen')
 
-# Normalización de los campos de Emails.
+# Emails columns tranformations:
 
 def NORMALIZACION_EMAILS(x):
     """_summary_: se utiliza la función NORMALIZACION_CAMPO_OBSERVACIONES para poder iterar sobre el campo correctamente. Luego se utiliza la función LIMPIEZA_EMAIL
@@ -110,27 +109,27 @@ def NORMALIZACION_EMAILS(x):
     try:
         MIDDLE3 = NORMALIZACION_CAMPO_OBSERVACIONES()
 
-        # EMAIL 1 Se renombra el campo "Email" por "Email_1"
+        # EMAIL 1 column rename"
         x.rename({'Email':'Email_1'}, axis=1, inplace=True)
         MIDDLE['Email_1'].replace(['NaN'],[""], inplace = True)
     
-        # Email 2 y 3: limpieza aplicando la función LIMPIEZA_EMAIL
+        # Email 2 y 3: clean using LIMPIEZA_EMAIL funtion:
         MIDDLE['Email_2'] = LIMPIEZA_EMAIL('Email_2', 6, MIDDLE3)
         MIDDLE['Email_3'] = LIMPIEZA_EMAIL('Email_3', 4, MIDDLE3)
       
-        # Creación DF Vertical MIDDLE_CONTACTO_EMAIL
+        # Vertical DF creation:
         MIDDLE_EMAIL1 = PREPARACION_CONCATENACION_VERTICAL ('Email_1', 'Email')  
         MIDDLE_EMAIL2 = PREPARACION_CONCATENACION_VERTICAL ('Email_2', 'Email')
         MIDDLE_EMAIL3 = PREPARACION_CONCATENACION_VERTICAL ('Email_3', 'Email')
         MIDDLE_CONTACTO_EMAIL = pd.concat([MIDDLE_EMAIL1, MIDDLE_EMAIL2, MIDDLE_EMAIL3], axis=0)
 
-        #Drop duplicates
+        #Drop duplicates:
         MIDDLE_CONTACTO_EMAIL = MIDDLE_CONTACTO_EMAIL.drop_duplicates(subset=['Email'], keep='last')
 
-        # Tranformación a minuscula
+        # Tranformación to lower:
         MIDDLE_CONTACTO_EMAIL['Email'] = MIDDLE_CONTACTO_EMAIL['Email'].str.low
 
-        # Reseteo del Indice para que sea incremental
+        # Reset index:
         MIDDLE_CONTACTO_EMAIL =  MIDDLE_CONTACTO_EMAIL.reset_index()
         del  MIDDLE_CONTACTO_EMAIL['index'] 
         return MIDDLE_CONTACTO_EMAIL   
@@ -162,7 +161,7 @@ def LIMPIEZA_EMAIL (x, y, z):
     MIDDLE[x] = A
     return MIDDLE[x]
      
-#Normalización de los campos de Teléfono.
+#Phone columns tranformation:
 
 def NORMALIZACION_TELEFONOS(x):
        """Se realiza la normalización de los 5 telefonos que llegan dentro del campo observaciones eliminando los caracteres especiales y renombrando los campos aplicando 
@@ -176,20 +175,20 @@ def NORMALIZACION_TELEFONOS(x):
           para cada cliente, ordenado en forma vertical con indice incremental.    
        """    
        try:
-         # Limpieza del Campo Observaciones 
+         # "Observaicones columns split" 
          MIDDLE0 = NORMALIZACION_CAMPO_OBSERVACIONES()  
 
-         #Rename del campo "numero por "Telefono_1
+         #"Numero" column rename:
          MIDDLE.rename({'Numero':'Telefono_1'}, axis=1, inplace=True) 
 
-         # Creación de campos de Telefono
+         # Cretaion of "Telefono_x" columns:
          MIDDLE['Telefono_2'] = MIDDLE0[8]
          MIDDLE['Telefono_3'] = MIDDLE0[12]
          MIDDLE['Telefono_4'] = MIDDLE0[14]
          MIDDLE['Telefono_5'] = MIDDLE0[16]
          MIDDLE['Telefono_6'] = MIDDLE0[18]
 
-         # Se aplica la función limpiar_telefonos especiales a cada campo de telefono
+         # Ejecution LIMPIEZA_TELEFONOS fuction:
          MIDDLE['Telefono_1'] = LIMPIEZA_TELEFONOS (MIDDLE, 'Telefono_1')
          MIDDLE['Telefono_2'] = LIMPIEZA_TELEFONOS (MIDDLE, 'Telefono_2')
          MIDDLE['Telefono_3'] = LIMPIEZA_TELEFONOS (MIDDLE, 'Telefono_3')
@@ -197,20 +196,20 @@ def NORMALIZACION_TELEFONOS(x):
          MIDDLE['Telefono_5'] = LIMPIEZA_TELEFONOS (MIDDLE, 'Telefono_5')
          MIDDLE['Telefono_6'] = LIMPIEZA_TELEFONOS (MIDDLE, 'Telefono_6')
 
-         # Creación de DF para concatenar verticalmente - Se utiliza la función PREPARACION_CONCATENACION_VERTICAL
+         # Vertical DF creation:
          MIDDLE_TELA1 = PREPARACION_CONCATENACION_VERTICAL ('Telefono_1', 'Telefono')
          MIDDLE_TELA2 = PREPARACION_CONCATENACION_VERTICAL ('Telefono_2', 'Telefono')
          MIDDLE_TELA3 = PREPARACION_CONCATENACION_VERTICAL ('Telefono_3', 'Telefono')
          MIDDLE_TELA4 = PREPARACION_CONCATENACION_VERTICAL ('Telefono_4', 'Telefono')
          MIDDLE_TELA5 = PREPARACION_CONCATENACION_VERTICAL ('Telefono_5', 'Telefono')
          MIDDLE_TELA6 = PREPARACION_CONCATENACION_VERTICAL ('Telefono_6', 'Telefono')
-         # Concatenación vertical
+         # Vertical concatenation
          MIDDLE_CONTACTO_TELEFONO = pd.concat([MIDDLE_TELA1, MIDDLE_TELA2, MIDDLE_TELA3, MIDDLE_TELA4, MIDDLE_TELA5, MIDDLE_TELA6], axis=0)
 
-         #Drop duplicates
+         #Drop duplicates:
          MIDDLE_CONTACTO_TELEFONO = MIDDLE_CONTACTO_TELEFONO.drop_duplicates(subset=['Telefono'], keep='last')
 
-         # Reseteo del Indice para que sea incremental
+         # Index reset:
          MIDDLE_CONTACTO_TELEFONO = MIDDLE_CONTACTO_TELEFONO.reset_index()
          del MIDDLE_CONTACTO_TELEFONO['index'] 
 
@@ -268,7 +267,7 @@ def PREPARACION_CONCATENACION_VERTICAL (x, y):
    except:
       print('Hubo un error en la normalización de los datos personales (número o tipo de docuemnto)')
 
-#Normalización de los campos de Documento y Modelo.
+# Marca and Modelo columns tranformation:
 
 def NORMALIZACION_PERSONA_AUTO(x):
     """_summary_: Campo número de documento: se limpia de caracteres especiales.
@@ -284,39 +283,38 @@ def NORMALIZACION_PERSONA_AUTO(x):
         DataFrame: DataFrame con datos de número/tipo de docuemnto, modelo y patente.
     """ 
     try:   
-      # Normalización Número y Tipo de Documento:
-      # Transformación a STR
+      # ID transformations:
+      # To str.
       MIDDLE['NumeroDocumento'] = x['NumeroDocumento'].astype(str)
-      # Split para iterar
+      # "NuneroDocuemento" splti.
       DOC = (x['NumeroDocumento'].str.split("", n = 12, expand = True)) 
-      # Limpieza de carcateres especiales
+      # Special characters clean.
       DOC.replace(['.'],[""], inplace = True)
       DOC.replace([','],[""], inplace = True)
       DOC.replace(['-'],[""], inplace = True)
       DOC.replace([')'],[""], inplace = True)
       DOC.replace(['('],[""], inplace = True)
       DOC.replace([None],[""], inplace = True)
-      # Se eliminan los "0" del final que general el split
+      # "0" delete.
       DOC[9].replace(['0'],[""], inplace = True)
       DOC[10].replace(['0'],[""], inplace = True)
       DOC[12].replace(['.0'],[""], inplace = True)
       x['NumeroDocumento'] = DOC[1] + DOC[2] + DOC[3] + DOC[4] + DOC[5]+ DOC[6] + DOC[7] + DOC[8] + DOC[9] + DOC[10] + DOC[11] + DOC[12]  
       x['NumeroDocumento'].replace(['nan'],[''], inplace = True)
-      # Rename del campo NumeroDocumento
+      # Rename "NumeroDocumento".
       x.rename({'NumeroDocumento':'Nro_Documento'}, axis=1, inplace=True)
-      # Creación del Campo Tipo_Documento vacio
+      # "Tipo_Documento" colun creation.
       x['Tipo_Documento'] = ""
 
-      # Concatenación Marca y Model
+      # Marca y Model concatenation:
       x['Modelo1'] = x['Marca'] + " " + x['Modelo']
-      # Delete de Campos temporales
+      # Delete auxiliari columns.
       del x['Marca']
       del x['Modelo']
-      # Rename del campo Modelo
+      # Rename "Model" calomn.
       x.rename({'Modelo1':'Modelo'}, axis=1, inplace=True)
-      # Limpieza de campos temporales
-    
-      # Creación del DF vertical
+          
+      # Vertical DF creation:
       MIDDLE_PERSONA_AUTO = pd.DataFrame()
       MIDDLE_PERSONA_AUTO['Tipo_Documento'] = x['Tipo_Documento']
       MIDDLE_PERSONA_AUTO['Nro_Documento'] = x['Nro_Documento']
@@ -332,7 +330,7 @@ def NORMALIZACION_PERSONA_AUTO(x):
 
 
 CANTIDAD_COLUMNAS(MIDDLE)
-print(NOMBRE_COLUMNAS(MIDDLE))
-print(NORMALIZACION_PERSONA_AUTO(MIDDLE))
-print(NORMALIZACION_EMAILS(MIDDLE))
-print(NORMALIZACION_TELEFONOS(MIDDLE))
+NOMBRE_COLUMNAS(MIDDLE)
+NORMALIZACION_PERSONA_AUTO(MIDDLE)
+NORMALIZACION_EMAILS(MIDDLE)
+NORMALIZACION_TELEFONOS(MIDDLE)
